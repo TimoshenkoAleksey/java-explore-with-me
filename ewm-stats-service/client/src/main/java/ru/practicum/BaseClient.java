@@ -26,12 +26,12 @@ public class BaseClient {
         return responseBuilder.build();
     }
 
-    protected ResponseEntity<Object> get(String path, @Nullable Map<String, Object> params) {
-        return makeAndSendRequest(HttpMethod.GET, path, params, null);
+    protected ResponseEntity<Object> get(String path, @Nullable Map<String, Object> parameters) {
+        return makeAndSendRequest(HttpMethod.GET, path, parameters, null);
     }
 
-    protected <T> ResponseEntity<Object> post(String path, @Nullable Map<String, Object> params, T body) {
-        return makeAndSendRequest(HttpMethod.POST, path, params, body);
+    protected <T> ResponseEntity<Object> post(String path, @Nullable Map<String, Object> parameters, T body) {
+        return makeAndSendRequest(HttpMethod.POST, path, parameters, body);
     }
 
     protected <T> ResponseEntity<Object> post(String path, T body) {

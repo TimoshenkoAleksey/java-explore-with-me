@@ -1,6 +1,5 @@
 package ru.practicum.service;
 
-import org.springframework.data.jpa.repository.Query;
 import ru.practicum.HitDto;
 import ru.practicum.model.Stats;
 
