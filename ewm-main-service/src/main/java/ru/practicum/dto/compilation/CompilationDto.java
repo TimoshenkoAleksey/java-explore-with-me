@@ -6,11 +6,11 @@ import ru.practicum.dto.event.EventShortDto;
 import java.util.ArrayList;
 import java.util.List;
 
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder(toBuilder = true)
 public class CompilationDto {
     private Long id;
     private String title;

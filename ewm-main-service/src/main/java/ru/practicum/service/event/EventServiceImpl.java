@@ -53,7 +53,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         event.setInitiator(user);
         event.setCategory(category);
         event.setLocation(location);
-        event.setStatus(EventStatus.PENDING);
+        event.setState(EventState.PENDING);
         checkDateTimeIsAfterNowWithGap(event.getEventDate(), 2);
         Event savedEvent = eventRepo.save(event);
         return eventMapper.toEventFullDto(savedEvent);
@@ -84,11 +84,11 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
     public EventFullDto updateByPrivate(UpdateEventUserRequest request, Long userId, Long eventId) {
         getUserIfExists(userId);
         Event event = getEventIfExists(eventId);
-        if (event.getStatus() == EventStatus.PUBLISHED) {
+        if (event.getState() == EventState.PUBLISHED) {
             throw new ConflictException("You cannot update a published event");
         }
         updateEventFields(event, request);
-        updateEventStateAction(event, request.getActionUserState());
+        updateEventStateAction(event, request.getStateAction());
         eventRepo.save(event);
         return eventMapper.toEventFullDto(event);
     }
@@ -105,7 +105,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
 
     @Override
     @Transactional
-    public EventRequestStatusUpdateResult updateEventStatusByPrivate(EventRequestStatusUpdateRequest update, Long userId, Long eventId) {
+    public EventRequestStatusUpdateResult updateByPrivate(EventRequestStatusUpdateRequest update, Long userId, Long eventId) {
         getUserIfExists(userId);
         Event event = getEventIfExists(eventId);
         List<Long> requestIds = update.getRequestIds();
@@ -147,7 +147,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         if (Objects.nonNull(target)) {
             checkDateTimeIsAfterNowWithGap(target, 2);
         }
-        ActionAdminState action = request.getActionAdminState();
+        StateActionAdmin action = request.getStateAction();
         if (Objects.nonNull(action)) {
             switch (action) {
                 case PUBLISH_EVENT:
@@ -163,9 +163,9 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
 
     @Override
     @Transactional(readOnly = true)
-    public EventFullDto getEventByPublic(Long eventId, HttpServletRequest request) {
+    public EventFullDto getEventsByPublic(Long eventId, HttpServletRequest request) {
         Event event = getEventIfExists(eventId);
-        boolean published = (event.getStatus() == EventStatus.PUBLISHED);
+        boolean published = (event.getState() == EventState.PUBLISHED);
         if (!published) {
             throw new NotFoundException("Event not found.");
         }
@@ -206,7 +206,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
 
     private void completeWithViews(EventDto eventDto) {
         Long eventId = eventDto.getId();
-        Long views = statService.getView(eventId);
+        Long views = statService.getViews(eventId);
         eventDto.setViews(views);
     }
 
@@ -243,27 +243,27 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
     }
 
     private void publishEvent(UpdateEventAdminRequest request, Event event) {
-        EventStatus status = event.getStatus();
-        if (status == EventStatus.PUBLISHED) {
+        EventState state = event.getState();
+        if (state == EventState.PUBLISHED) {
             throw new ConflictException("The event has already been published");
         }
-        if (status == EventStatus.REJECTED) {
+        if (state == EventState.REJECTED) {
             throw new ConflictException("The event has already been rejected");
         }
-        if (status == EventStatus.CANCELED) {
+        if (state == EventState.CANCELED) {
             throw new ConflictException("The event has already been canceled");
         }
         updateEventFields(event, request);
-        event.setStatus(EventStatus.PUBLISHED);
+        event.setState(EventState.PUBLISHED);
         event.setPublishedOn(LocalDateTime.now());
     }
 
     private void rejectEvent(Event event) {
-        EventStatus state = event.getStatus();
-        if (state == EventStatus.PUBLISHED || state == EventStatus.CANCELED) {
+        EventState state = event.getState();
+        if (state == EventState.PUBLISHED || state == EventState.CANCELED) {
             throw new ConflictException("You cannot reject a published event");
         }
-        event.setStatus(EventStatus.CANCELED);
+        event.setState(EventState.CANCELED);
     }
 
     private void confirmAndSetInResult(List<ParticipationRequest> requestsToUpdate, EventRequestStatusUpdateResult result, Event event) {
@@ -345,12 +345,12 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         }
     }
 
-    private void updateEventStateAction(Event event, ActionUserState action) {
+    private void updateEventStateAction(Event event, StateActionUser action) {
         if (Objects.nonNull(action)) {
-            if (action == ActionUserState.SEND_TO_REVIEW) {
-                event.setStatus(EventStatus.PENDING);
-            } else if (action == ActionUserState.CANCEL_REVIEW) {
-                event.setStatus(EventStatus.CANCELED);
+            if (action == StateActionUser.SEND_TO_REVIEW) {
+                event.setState(EventState.PENDING);
+            } else if (action == StateActionUser.CANCEL_REVIEW) {
+                event.setState(EventState.CANCELED);
             }
         }
     }

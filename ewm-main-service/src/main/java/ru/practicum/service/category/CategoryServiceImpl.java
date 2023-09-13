@@ -1,6 +1,7 @@
 package ru.practicum.service.category;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,39 +20,35 @@ import ru.practicum.repository.EventRepository;
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
-
     private final CategoryRepository categoryRepository;
     private final EventRepository eventRepository;
     private final CategoryMapper categoryMapper;
 
     @Override
     @Transactional
-    public List<CategoryDto> getAll(Integer from, Integer size) {
-        Pageable pageable = PageRequest.of(from, size);
-        Page<Category> categoryPage = categoryRepository.findAll(pageable);
-        return categoryPage.map(categoryMapper::toCategoryDto).getContent();
+    public CategoryDto add(NewCategoryDto category) {
+        Category newCategory = categoryMapper.toCategory(category);
+        Category saved = categoryRepository.save(newCategory);
+        return categoryMapper.toCategoryDto(saved);
     }
 
     @Override
     @Transactional
-    public CategoryDto getById(Long categoryId) {
-        Category category = getCategoryIfExists(categoryId);
-        return categoryMapper.toCategoryDto(category);
+    public void delete(Long catId) {
+        Category category = getCategoryIfExists(catId);
+        if (eventRepository.findByCategoryId(catId).isPresent()) {
+            throw new ConflictException("Category is connected with events and could be deleted.");
+        }
+        categoryRepository.delete(category);
     }
 
     @Override
     @Transactional
-    public CategoryDto add(NewCategoryDto newCategoryDto) {
-        Category category = categoryRepository.save(categoryMapper.toCategory(newCategoryDto));
-        return categoryMapper.toCategoryDto(category);
-    }
-
-    @Override
-    @Transactional
-    public CategoryDto update(CategoryDto categoryDto, Long categoryId) {
-        Category category = getCategoryIfExists(categoryId);
+    public CategoryDto update(CategoryDto categoryDto, Long catId) {
+        Category category = getCategoryIfExists(catId);
         String newName = categoryDto.getName();
         String existingName = category.getName();
         category.setName(StringUtils.defaultIfBlank(newName, existingName));
@@ -60,15 +57,21 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public void delete(Long categoryId) {
-        Category category = getCategoryIfExists(categoryId);
-        if (eventRepository.findByCategoryId(categoryId).isPresent()) {
-            throw new ConflictException("Category is connected with events and could be deleted");
-        }
-        categoryRepository.delete(category);
+    public List<CategoryDto> getAll(Integer from, Integer size) {
+        Pageable pageable = PageRequest.of(from, size);
+        Page<Category> catPage = categoryRepository.findAll(pageable);
+        return catPage.map(categoryMapper::toCategoryDto).getContent();
     }
 
-    private Category getCategoryIfExists(long categoryId) {
-        return categoryRepository.findById(categoryId).orElseThrow(() -> new NotFoundException("Category not found"));
+    @Override
+    @Transactional
+    public CategoryDto getById(Long catId) {
+        Category category = getCategoryIfExists(catId);
+        return categoryMapper.toCategoryDto(category);
+    }
+
+    private Category getCategoryIfExists(long catId) {
+        return categoryRepository.findById(catId)
+                .orElseThrow(() -> new NotFoundException("Category not found."));
     }
 }

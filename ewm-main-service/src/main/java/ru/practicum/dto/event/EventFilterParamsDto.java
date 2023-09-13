@@ -2,18 +2,19 @@ package ru.practicum.dto.event;
 
 import lombok.*;
 import ru.practicum.enums.EventSort;
-import ru.practicum.enums.EventStatus;
+import ru.practicum.enums.EventState;
 
 import java.util.List;
 
-@Builder(toBuilder = true)
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder(toBuilder = true)
 public class EventFilterParamsDto {
+
     private List<Long> ids = List.of();
-    private List<EventStatus> states = List.of();
+    private List<EventState> states = List.of();
     private List<Long> categories = List.of();
     private String rangeStart;
     private String rangeEnd;

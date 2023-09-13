@@ -4,16 +4,17 @@ import lombok.*;
 
 import javax.persistence.*;
 
-@Builder(toBuilder = true)
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
 @Entity(name = "categories")
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder(toBuilder = true)
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(unique = true)
     private String name;
 }

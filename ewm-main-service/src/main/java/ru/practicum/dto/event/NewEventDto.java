@@ -21,8 +21,8 @@ public class NewEventDto {
     private String annotation;
     @NotNull
     private Long category;
-    @NotBlank
     @Length(min = 20, max = 7000)
+    @NotBlank
     private String description;
     @NotNull
     @Future
@@ -33,12 +33,12 @@ public class NewEventDto {
     private LocationDto location;
     @NotNull
     private Boolean paid = Boolean.FALSE;
-    @NotNull
     @Min(0)
+    @NotNull
     private Integer participantLimit = 0;
     @NotNull
     private Boolean requestModeration = Boolean.TRUE;
-    @NotBlank
     @Length(min = 3, max = 120)
+    @NotBlank
     private String title;
 }

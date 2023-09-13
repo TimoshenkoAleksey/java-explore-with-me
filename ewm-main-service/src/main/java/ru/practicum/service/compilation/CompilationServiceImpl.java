@@ -21,76 +21,77 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class CompilationServiceImpl implements CompilationService {
-    private final CompilationRepository compilationRepository;
-    private final EventRepository eventRepository;
+    private final CompilationRepository compilationRepo;
+    private final EventRepository eventRepo;
     private final CompilationMapper compilationMapper;
+
+    @Override
+    @Transactional
+    public CompilationDto add(NewCompilationDto newCompDto) {
+        Set<Event> events = fetchEvents(newCompDto.getEvents());
+        Compilation newComp = compilationMapper.toCompilation(newCompDto, events);
+        Compilation savedComp = compilationRepo.save(newComp);
+        return compilationMapper.toCompilationDto(savedComp);
+    }
+
+    @Override
+    @Transactional
+    public CompilationDto update(Long compId, UpdateCompilationRequest request) {
+        Compilation compilation = getCompilationById(compId);
+        Set<Long> eventsIds = request.getEvents();
+        if (!eventsIds.isEmpty() || Objects.nonNull(eventsIds)) {
+            Set<Event> updatedEvents = fetchEvents(eventsIds);
+            compilation.setEvents(updatedEvents);
+        }
+        if (Objects.nonNull(request.getPinned())) {
+            compilation.setPinned(request.getPinned());
+        }
+        String title = request.getTitle();
+        if (title != null && title.isBlank()) {
+            if (compilationRepo.existsByTitleAndIdNot(title, compilation.getId())) {
+                throw new ConflictException("Compilation title already exists and could not be used");
+            }
+            compilation.setTitle(title);
+        }
+        Compilation updatedComp = compilationRepo.save(compilation);
+        return compilationMapper.toCompilationDto(updatedComp);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long compId) {
+        Compilation compilation = getCompilationById(compId);
+        compilationRepo.delete(compilation);
+    }
 
     @Override
     @Transactional(readOnly = true)
     public List<CompilationDto> getAll(Boolean pinned, Integer from, Integer size) {
         Page<Compilation> compilations;
         if (pinned == null) {
-            compilations = compilationRepository.findAll(PageRequest.of(from / size, size));
+            compilations = compilationRepo.findAll(PageRequest.of(from / size, size));
         } else {
-            compilations = compilationRepository.findAllByPinned(pinned, PageRequest.of(from / size, size));
+            compilations = compilationRepo.findAllByPinned(pinned, PageRequest.of(from / size, size));
         }
         return compilations.map(compilationMapper::toCompilationDto).getContent();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public CompilationDto getById(Long compilationId) {
-        Compilation compilation = getCompilationById(compilationId);
+    public CompilationDto getById(Long compId) {
+        Compilation compilation = getCompilationById(compId);
         return compilationMapper.toCompilationDto(compilation);
     }
 
-    @Override
-    @Transactional
-    public CompilationDto add(NewCompilationDto newCompilationDto) {
-        Set<Event> events = fetchEvents(newCompilationDto.getEvents());
-        Compilation compilation = compilationRepository.save(compilationMapper.toCompilation(newCompilationDto, events));
-        return compilationMapper.toCompilationDto(compilation);
-    }
-
-    @Override
-    @Transactional
-    public CompilationDto update(Long compilationId, UpdateCompilationRequest updateCompilationRequest) {
-        Compilation compilation = getCompilationById(compilationId);
-        Set<Long> eventIds = updateCompilationRequest.getEvents();
-        if (!eventIds.isEmpty()) {
-            Set<Event> updatedEvents = fetchEvents(eventIds);
-            compilation.setEvents(updatedEvents);
-        }
-        if (Objects.nonNull(updateCompilationRequest.getPinned())) {
-            compilation.setPinned(updateCompilationRequest.getPinned());
-        }
-        String title = updateCompilationRequest.getTitle();
-        if (title != null && title.isBlank()) {
-            if (compilationRepository.existsByTitleAndIdNot(title, compilation.getId())) {
-                throw new ConflictException("Compilation title already exists");
-            }
-            compilation.setTitle(title);
-        }
-        Compilation updatedCompilation = compilationRepository.save(compilation);
-        return compilationMapper.toCompilationDto(updatedCompilation);
-    }
-
-    @Override
-    @Transactional
-    public void delete(Long compilationId) {
-        Compilation compilation = getCompilationById(compilationId);
-        compilationRepository.delete(compilation);
-    }
-
-    private Compilation getCompilationById(Long compilationId) {
-        return compilationRepository.findById(compilationId).orElseThrow(()
-                -> new NotFoundException("Compilation not found"));
+    private Compilation getCompilationById(Long comId) {
+        return compilationRepo.findById(comId)
+                .orElseThrow(() -> new NotFoundException("Compilation not found."));
     }
 
     private Set<Event> fetchEvents(Set<Long> eventIds) {
         if (eventIds == null || eventIds.isEmpty()) {
             return Collections.emptySet();
         }
-        return new HashSet<>(eventRepository.findAllById(eventIds));
+        return new HashSet<>(eventRepo.findAllById(eventIds));
     }
 }

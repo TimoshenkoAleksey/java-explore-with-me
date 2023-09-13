@@ -49,21 +49,15 @@ public class ErrorHandler {
         return new ErrorResponse("Conflict error: ", e.getMessage());
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleRuntimeException(final RuntimeException e) {
-        return new ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage());
-    }
-
     @ExceptionHandler()
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleThrowable(final Throwable e) {
-        return new ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage());
+    public ru.practicum.exception.ErrorResponse handleThrowable(final Throwable e) {
+        return new ru.practicum.exception.ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleMissingServletRequestParameterException(final MissingServletRequestParameterException e) {
-        return new ErrorResponse("Validation error: ", e.getMessage());
+    public ru.practicum.exception.ErrorResponse handleMissingServletRequestParameterException(final MissingServletRequestParameterException e) {
+        return new ru.practicum.exception.ErrorResponse("Validation error: ", e.getMessage());
     }
 }

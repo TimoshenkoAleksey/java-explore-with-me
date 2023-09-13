@@ -1,17 +1,16 @@
 package ru.practicum.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 
 @Data
-@Builder(toBuilder = true)
-@AllArgsConstructor
+@ToString
+@Builder
+@Entity
+@Table(name = "users")
 @NoArgsConstructor
-@Entity(name = "users")
+@AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

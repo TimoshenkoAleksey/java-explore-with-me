@@ -7,11 +7,11 @@ import javax.validation.constraints.NotBlank;
 import java.util.HashSet;
 import java.util.Set;
 
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder(toBuilder = true)
 public class NewCompilationDto {
     @NotBlank
     @Length(min = 1, max = 50)

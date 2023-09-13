@@ -12,16 +12,15 @@ import java.util.List;
 
 public interface PrivateEventService {
 
-    List<EventShortDto> getEventsByPrivate(Long userId,Integer from, Integer size);
+    List<EventShortDto> getEventsByPrivate(Long userId, Integer from, Integer size);
 
-    EventFullDto createByPrivate(NewEventDto newEventDto, Long userId);
+    EventFullDto createByPrivate(NewEventDto eventDto, Long userId);
 
     EventFullDto getEventByPrivate(Long userId, Long eventId);
 
-    EventFullDto updateByPrivate(UpdateEventUserRequest updateEventUserRequest, Long userId, Long eventId);
+    EventFullDto updateByPrivate(UpdateEventUserRequest updateRequest, Long userId, Long eventId);
 
     List<ParticipationRequestDto> getRequestsByPrivate(Long userId, Long eventId);
 
-    EventRequestStatusUpdateResult updateEventStatusByPrivate(EventRequestStatusUpdateRequest updateRequest, Long userId,
-                                                              Long eventId);
+    EventRequestStatusUpdateResult updateByPrivate(EventRequestStatusUpdateRequest updateRequest, Long userId, Long eventId);
 }

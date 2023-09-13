@@ -1,8 +1,8 @@
 package ru.practicum.repository.customEvent;
 
 import org.springframework.stereotype.Repository;
+import ru.practicum.enums.EventState;
 import ru.practicum.dto.event.EventFilterParams;
-import ru.practicum.enums.EventStatus;
 import ru.practicum.model.Event;
 
 import javax.persistence.EntityManager;
@@ -64,7 +64,7 @@ public class CustomEventRepositoryImpl implements CustomEventRepository {
             params.setRangeStart(LocalDateTime.now());
         }
 
-        addStateFilter(criteria, cb, eventRoot, List.of(EventStatus.PUBLISHED));
+        addStateFilter(criteria, cb, eventRoot, List.of(EventState.PUBLISHED));
         addTextFilter(criteria, cb, eventRoot, params.getText());
         addCategoryFilter(criteria, cb, eventRoot, params.getCategories());
         addPaidFilter(criteria, cb, eventRoot, params.getPaid());
@@ -102,9 +102,9 @@ public class CustomEventRepositoryImpl implements CustomEventRepository {
         }
     }
 
-    private void addStateFilter(Predicate criteria, CriteriaBuilder cb, Root<Event> eventRoot, List<EventStatus> states) {
+    private void addStateFilter(Predicate criteria, CriteriaBuilder cb, Root<Event> eventRoot, List<EventState> states) {
         if (!states.isEmpty()) {
-            cb.and(criteria, eventRoot.get("status").in(states));
+            cb.and(criteria, eventRoot.get("state").in(states));
         }
     }
 

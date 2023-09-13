@@ -4,11 +4,11 @@ import lombok.*;
 
 import java.util.List;
 
-@Builder(toBuilder = true)
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder(toBuilder = true)
 @ToString
 public class EventRequestStatusUpdateRequest {
     private List<Long> requestIds;
