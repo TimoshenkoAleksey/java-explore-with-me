@@ -29,20 +29,25 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public CategoryDto add(NewCategoryDto category) {
-        Category newCategory = categoryMapper.toCategory(category);
-        Category saved = categoryRepository.save(newCategory);
-        return categoryMapper.toCategoryDto(saved);
+    public List<CategoryDto> getAll(Integer from, Integer size) {
+        Pageable pageable = PageRequest.of(from, size);
+        Page<Category> catPage = categoryRepository.findAll(pageable);
+        return catPage.map(categoryMapper::toCategoryDto).getContent();
     }
 
     @Override
     @Transactional
-    public void delete(Long catId) {
+    public CategoryDto getById(Long catId) {
         Category category = getCategoryIfExists(catId);
-        if (eventRepository.findByCategoryId(catId).isPresent()) {
-            throw new ConflictException("Category is connected with events and could be deleted.");
-        }
-        categoryRepository.delete(category);
+        return categoryMapper.toCategoryDto(category);
+    }
+
+    @Override
+    @Transactional
+    public CategoryDto add(NewCategoryDto category) {
+        Category newCategory = categoryMapper.toCategory(category);
+        Category saved = categoryRepository.save(newCategory);
+        return categoryMapper.toCategoryDto(saved);
     }
 
     @Override
@@ -57,17 +62,12 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public List<CategoryDto> getAll(Integer from, Integer size) {
-        Pageable pageable = PageRequest.of(from, size);
-        Page<Category> catPage = categoryRepository.findAll(pageable);
-        return catPage.map(categoryMapper::toCategoryDto).getContent();
-    }
-
-    @Override
-    @Transactional
-    public CategoryDto getById(Long catId) {
+    public void delete(Long catId) {
         Category category = getCategoryIfExists(catId);
-        return categoryMapper.toCategoryDto(category);
+        if (eventRepository.findByCategoryId(catId).isPresent()) {
+            throw new ConflictException("Category is connected with events and could be deleted.");
+        }
+        categoryRepository.delete(category);
     }
 
     private Category getCategoryIfExists(long catId) {

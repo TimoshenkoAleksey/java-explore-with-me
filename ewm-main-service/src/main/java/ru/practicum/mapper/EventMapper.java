@@ -2,13 +2,15 @@ package ru.practicum.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
 import ru.practicum.dto.event.*;
 import ru.practicum.model.Event;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = {CategoryMapper.class, UserMapper.class, LocationMapper.class})
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
+        uses = {CategoryMapper.class, UserMapper.class, LocationMapper.class})
 public interface EventMapper {
 
     @Mapping(target = "id", ignore = true)
