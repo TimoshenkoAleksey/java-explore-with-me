@@ -33,11 +33,11 @@ import static ru.practicum.utils.ExploreDateTimeFormatter.*;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class EventServiceImpl implements AdminEventService, PublicEventService, PrivateEventService {
-    private final EventRepository eventRepo;
-    private final UserRepository userRepo;
-    private final RequestRepository requestRepo;
-    private final CategoryRepository categoryRepo;
-    private final LocationRepository locationRepo;
+    private final EventRepository eventRepository;
+    private final UserRepository userRepository;
+    private final RequestRepository requestRepository;
+    private final CategoryRepository categoryRepository;
+    private final LocationRepository locationRepository;
     private final EventMapper eventMapper;
     private final LocationMapper locationMapper;
     private final ParticipationRequestMapper participationRequestMapper;
@@ -55,7 +55,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         event.setLocation(location);
         event.setState(EventState.PENDING);
         checkDateTimeIsAfterNowWithGap(event.getEventDate(), 2);
-        Event savedEvent = eventRepo.save(event);
+        Event savedEvent = eventRepository.save(event);
         return eventMapper.toEventFullDto(savedEvent);
     }
 
@@ -64,7 +64,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
     public List<EventShortDto> getEventsByPrivate(Long userId, Integer from, Integer size) {
         getUserIfExists(userId);
         int page = from / size;
-        List<Event> events = eventRepo.findByInitiatorId(userId, PageRequest.of(page, size));
+        List<Event> events = eventRepository.findByInitiatorId(userId, PageRequest.of(page, size));
         statService.getViewsList(events);
         getConfirmedRequest(events);
         return new ArrayList<>(eventMapper.toEventShortDtoListForEvents(events));
@@ -89,7 +89,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         }
         updateEventFields(event, request);
         updateEventStateAction(event, request.getStateAction());
-        eventRepo.save(event);
+        eventRepository.save(event);
         return eventMapper.toEventFullDto(event);
     }
 
@@ -97,7 +97,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
     @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getRequestsByPrivate(Long userId, Long eventId) {
         getUserIfExists(userId);
-        return requestRepo.findByEventId(eventId)
+        return requestRepository.findByEventId(eventId)
                 .stream()
                 .map(participationRequestMapper::toRequestDto)
                 .collect(Collectors.toList());
@@ -113,7 +113,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         if (!isRequestStatusUpdateAllowed(event, update)) {
             return result;
         }
-        List<ParticipationRequest> requestsToUpdate = requestRepo.findAllByIdIn(requestIds);
+        List<ParticipationRequest> requestsToUpdate = requestRepository.findAllByIdIn(requestIds);
         checkAllRequestsPending(requestsToUpdate);
         RequestStatus status = RequestStatus.valueOf(update.getStatus());
         if (status == RequestStatus.CONFIRMED) {
@@ -128,7 +128,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
     @Transactional(readOnly = true)
     public List<EventFullDto> getEventsByAdmin(EventFilterParamsDto paramsDto) {
         EventFilterParams params = convertInputParams(paramsDto);
-        List<Event> events = eventRepo.adminEventsSearch(params);
+        List<Event> events = eventRepository.adminEventsSearch(params);
         statService.getViewsList(events);
         getConfirmedRequest(events);
         return events.stream()
@@ -158,7 +158,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
                     break;
             }
         }
-        return eventMapper.toEventFullDto(eventRepo.save(event));
+        return eventMapper.toEventFullDto(eventRepository.save(event));
     }
 
     @Override
@@ -178,7 +178,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
     @Transactional(readOnly = true)
     public List<EventShortDto> getEventsByPublic(EventFilterParamsDto paramsDto, HttpServletRequest request) {
         EventFilterParams params = convertInputParams(paramsDto);
-        List<Event> events = eventRepo.publicEventsSearch(params);
+        List<Event> events = eventRepository.publicEventsSearch(params);
         statService.getViewsList(events);
         getConfirmedRequest(events);
         statService.addHit(request);
@@ -188,7 +188,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
 
     private void getConfirmedRequest(List<Event> events) {
         List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
-        List<ConfirmedRequest> confirmedRequests = requestRepo.findConfirmedRequest(eventIds);
+        List<ConfirmedRequest> confirmedRequests = requestRepository.findConfirmedRequest(eventIds);
         Map<Long, Long> confirmedRequestsMap = confirmedRequests.stream()
                 .collect(Collectors.toMap(ConfirmedRequest::getEventId, ConfirmedRequest::getCount));
         events.forEach(event -> event.setConfirmedRequests(confirmedRequestsMap.getOrDefault(event.getId(), 0L)));
@@ -267,7 +267,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
     }
 
     private void confirmAndSetInResult(List<ParticipationRequest> requestsToUpdate, EventRequestStatusUpdateResult result, Event event) {
-        long confirmed = requestRepo.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
+        long confirmed = requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
         long limit = event.getParticipantLimit();
 
         for (ParticipationRequest request : requestsToUpdate) {
@@ -284,13 +284,13 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
 
     private void rejectAndSetInResult(List<ParticipationRequest> requestsToUpdate, EventRequestStatusUpdateResult result) {
         setStatus(requestsToUpdate, RequestStatus.REJECTED);
-        List<ParticipationRequest> rejectedRequests = requestRepo.saveAll(requestsToUpdate);
+        List<ParticipationRequest> rejectedRequests = requestRepository.saveAll(requestsToUpdate);
         result.setRejectedRequests(participationRequestMapper.toRequestDtoList(rejectedRequests));
     }
 
     private void confirmAndSetInResult(List<ParticipationRequest> requestsToUpdate, EventRequestStatusUpdateResult result) {
         setStatus(requestsToUpdate, RequestStatus.CONFIRMED);
-        List<ParticipationRequest> confirmed = requestRepo.saveAll(requestsToUpdate);
+        List<ParticipationRequest> confirmed = requestRepository.saveAll(requestsToUpdate);
         result.setConfirmedRequests(participationRequestMapper.toRequestDtoList(confirmed));
     }
 
@@ -299,29 +299,29 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
     }
 
     private User getUserIfExists(Long userId) {
-        return userRepo.findById(userId)
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found or unavailable."));
     }
 
     private Event getEventIfExists(Long eventId) {
-        return eventRepo.findById(eventId)
+        return eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event not found."));
     }
 
     private Category getCategoryIfExists(Long catId) {
-        return categoryRepo.findById(catId)
+        return categoryRepository.findById(catId)
                 .orElseThrow(() -> new NotFoundException("Category not found."));
     }
 
     private Location getLocation(LocationDto locationDto) {
         Location location = locationMapper.toLocation(locationDto);
-        return locationRepo.getByLatAndLon(location.getLat(), location.getLon())
-                .orElse(locationRepo.save(location));
+        return locationRepository.getByLatAndLon(location.getLat(), location.getLon())
+                .orElse(locationRepository.save(location));
     }
 
     private EventFullDto completeEventFullDto(Event event) {
         EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
-        Long confirmedRequests = requestRepo.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
+        Long confirmedRequests = requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
         completeWithViews(eventFullDto);
         eventFullDto.setConfirmedRequests(confirmedRequests);
         return eventFullDto;

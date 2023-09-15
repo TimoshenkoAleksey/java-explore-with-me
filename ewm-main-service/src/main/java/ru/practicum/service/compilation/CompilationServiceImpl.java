@@ -21,8 +21,8 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class CompilationServiceImpl implements CompilationService {
-    private final CompilationRepository compilationRepo;
-    private final EventRepository eventRepo;
+    private final CompilationRepository compilationRepository;
+    private final EventRepository eventRepository;
     private final CompilationMapper compilationMapper;
 
     @Override
@@ -30,7 +30,7 @@ public class CompilationServiceImpl implements CompilationService {
     public CompilationDto add(NewCompilationDto newCompDto) {
         Set<Event> events = fetchEvents(newCompDto.getEvents());
         Compilation newComp = compilationMapper.toCompilation(newCompDto, events);
-        Compilation savedComp = compilationRepo.save(newComp);
+        Compilation savedComp = compilationRepository.save(newComp);
         return compilationMapper.toCompilationDto(savedComp);
     }
 
@@ -48,12 +48,12 @@ public class CompilationServiceImpl implements CompilationService {
         }
         String title = request.getTitle();
         if (title != null && title.isBlank()) {
-            if (compilationRepo.existsByTitleAndIdNot(title, compilation.getId())) {
+            if (compilationRepository.existsByTitleAndIdNot(title, compilation.getId())) {
                 throw new ConflictException("Compilation title already exists and could not be used");
             }
             compilation.setTitle(title);
         }
-        Compilation updatedComp = compilationRepo.save(compilation);
+        Compilation updatedComp = compilationRepository.save(compilation);
         return compilationMapper.toCompilationDto(updatedComp);
     }
 
@@ -61,7 +61,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     public void delete(Long compId) {
         Compilation compilation = getCompilationById(compId);
-        compilationRepo.delete(compilation);
+        compilationRepository.delete(compilation);
     }
 
     @Override
@@ -69,9 +69,9 @@ public class CompilationServiceImpl implements CompilationService {
     public List<CompilationDto> getAll(Boolean pinned, Integer from, Integer size) {
         Page<Compilation> compilations;
         if (pinned == null) {
-            compilations = compilationRepo.findAll(PageRequest.of(from / size, size));
+            compilations = compilationRepository.findAll(PageRequest.of(from / size, size));
         } else {
-            compilations = compilationRepo.findAllByPinned(pinned, PageRequest.of(from / size, size));
+            compilations = compilationRepository.findAllByPinned(pinned, PageRequest.of(from / size, size));
         }
         return compilations.map(compilationMapper::toCompilationDto).getContent();
     }
@@ -84,7 +84,7 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     private Compilation getCompilationById(Long comId) {
-        return compilationRepo.findById(comId)
+        return compilationRepository.findById(comId)
                 .orElseThrow(() -> new NotFoundException("Compilation not found."));
     }
 
@@ -92,6 +92,6 @@ public class CompilationServiceImpl implements CompilationService {
         if (eventIds == null || eventIds.isEmpty()) {
             return Collections.emptySet();
         }
-        return new HashSet<>(eventRepo.findAllById(eventIds));
+        return new HashSet<>(eventRepository.findAllById(eventIds));
     }
 }

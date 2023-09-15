@@ -59,7 +59,7 @@ public class StatService {
         LocalDateTime start = events.get(0).getCreatedOn();
         LocalDateTime end = LocalDateTime.now();
         List<String> uris = new ArrayList<>();
-        String uri = "";
+        String uri;
         Map<String, Event> eventsUri = new HashMap<>();
         for (Event event : events) {
             if (start.isBefore(event.getCreatedOn())) {
