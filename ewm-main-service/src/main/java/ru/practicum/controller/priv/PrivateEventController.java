@@ -58,6 +58,6 @@ public class PrivateEventController {
     public EventRequestStatusUpdateResult update(@PathVariable Long userId,
                                                  @PathVariable Long eventId,
                                                  @RequestBody EventRequestStatusUpdateRequest updateRequest) {
-        return service.updateByPrivate(updateRequest, userId, eventId);
+        return service.updateStatusByPrivate(updateRequest, userId, eventId);
     }
 }

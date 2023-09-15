@@ -11,6 +11,7 @@ import java.util.Set;
 
 @Mapper(componentModel = "spring", uses = {EventMapper.class})
 public interface CompilationMapper {
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "events", expression = "java(events)")
     Compilation toCompilation(NewCompilationDto newCompDto, Set<Event> events);

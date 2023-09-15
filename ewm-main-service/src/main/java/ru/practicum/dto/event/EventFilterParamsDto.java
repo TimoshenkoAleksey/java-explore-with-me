@@ -12,7 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class EventFilterParamsDto {
-
     private List<Long> ids = List.of();
     private List<EventState> states = List.of();
     private List<Long> categories = List.of();

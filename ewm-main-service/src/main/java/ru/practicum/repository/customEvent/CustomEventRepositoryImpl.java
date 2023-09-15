@@ -21,6 +21,7 @@ public class CustomEventRepositoryImpl implements CustomEventRepository {
     @PersistenceContext
     private EntityManager entityManager;
 
+    @Override
     public List<Event> adminEventsSearch(EventFilterParams params) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Event> cq = cb.createQuery(Event.class);
@@ -33,6 +34,7 @@ public class CustomEventRepositoryImpl implements CustomEventRepository {
         return executeQuery(cq, params);
     }
 
+    @Override
     public List<Event> publicEventsSearch(EventFilterParams params) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Event> cq = cb.createQuery(Event.class);

@@ -14,13 +14,14 @@ public interface PrivateEventService {
 
     List<EventShortDto> getEventsByPrivate(Long userId, Integer from, Integer size);
 
-    EventFullDto createByPrivate(NewEventDto eventDto, Long userId);
-
     EventFullDto getEventByPrivate(Long userId, Long eventId);
-
-    EventFullDto updateByPrivate(UpdateEventUserRequest updateRequest, Long userId, Long eventId);
 
     List<ParticipationRequestDto> getRequestsByPrivate(Long userId, Long eventId);
 
-    EventRequestStatusUpdateResult updateByPrivate(EventRequestStatusUpdateRequest updateRequest, Long userId, Long eventId);
+    EventFullDto createByPrivate(NewEventDto eventDto, Long userId);
+
+    EventFullDto updateByPrivate(UpdateEventUserRequest updateRequest, Long userId, Long eventId);
+
+    EventRequestStatusUpdateResult updateStatusByPrivate(EventRequestStatusUpdateRequest updateRequest, Long userId,
+                                                         Long eventId);
 }

@@ -16,6 +16,7 @@ import javax.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class ErrorHandler {
+
     @ExceptionHandler({ConstraintViolationException.class,
             MethodArgumentNotValidException.class,
             MissingPathVariableException.class,
@@ -49,15 +50,21 @@ public class ErrorHandler {
         return new ErrorResponse("Conflict error: ", e.getMessage());
     }
 
-    @ExceptionHandler()
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ru.practicum.exception.ErrorResponse handleThrowable(final Throwable e) {
-        return new ru.practicum.exception.ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage());
-    }
-
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ru.practicum.exception.ErrorResponse handleMissingServletRequestParameterException(final MissingServletRequestParameterException e) {
         return new ru.practicum.exception.ErrorResponse("Validation error: ", e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleRuntimeException(final RuntimeException e) {
+        return new ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage());
+    }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ru.practicum.exception.ErrorResponse handleThrowable(final Throwable e) {
+        return new ru.practicum.exception.ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage());
     }
 }

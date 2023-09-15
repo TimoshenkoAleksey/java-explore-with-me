@@ -19,52 +19,36 @@ import ru.practicum.mapper.ParticipationRequestMapper;
 import ru.practicum.model.*;
 import ru.practicum.repository.*;
 import ru.practicum.service.stat.StatService;
+import ru.practicum.utils.ExploreDateTimeFormatter;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ru.practicum.utils.ExploreDateTimeFormatter.*;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class EventServiceImpl implements AdminEventService, PublicEventService, PrivateEventService {
-    private final EventRepository eventRepo;
-    private final UserRepository userRepo;
-    private final RequestRepository requestRepo;
-    private final CategoryRepository categoryRepo;
-    private final LocationRepository locationRepo;
+    private final EventRepository eventRepository;
+    private final UserRepository userRepository;
+    private final RequestRepository requestRepository;
+    private final CategoryRepository categoryRepository;
+    private final LocationRepository locationRepository;
     private final EventMapper eventMapper;
     private final LocationMapper locationMapper;
     private final ParticipationRequestMapper participationRequestMapper;
     private final StatService statService;
 
     @Override
-    @Transactional
-    public EventFullDto createByPrivate(NewEventDto newEventDto, Long userId) {
-        Event event = eventMapper.toEvent(newEventDto);
-        User user = getUserIfExists(userId);
-        Category category = getCategoryIfExists(newEventDto.getCategory());
-        Location location = getLocation(newEventDto.getLocation());
-        event.setInitiator(user);
-        event.setCategory(category);
-        event.setLocation(location);
-        event.setState(EventState.PENDING);
-        checkDateTimeIsAfterNowWithGap(event.getEventDate(), 2);
-        Event savedEvent = eventRepo.save(event);
-        return eventMapper.toEventFullDto(savedEvent);
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public List<EventShortDto> getEventsByPrivate(Long userId, Integer from, Integer size) {
         getUserIfExists(userId);
         int page = from / size;
-        List<Event> events = eventRepo.findByInitiatorId(userId, PageRequest.of(page, size));
+        List<Event> events = eventRepository.findByInitiatorId(userId, PageRequest.of(page, size));
         statService.getViewsList(events);
         getConfirmedRequest(events);
         return new ArrayList<>(eventMapper.toEventShortDtoListForEvents(events));
@@ -80,6 +64,32 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<ParticipationRequestDto> getRequestsByPrivate(Long userId, Long eventId) {
+        getUserIfExists(userId);
+        return requestRepository.findByEventId(eventId)
+                .stream()
+                .map(participationRequestMapper::toRequestDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public EventFullDto createByPrivate(NewEventDto newEventDto, Long userId) {
+        Event event = eventMapper.toEvent(newEventDto);
+        User user = getUserIfExists(userId);
+        Category category = getCategoryIfExists(newEventDto.getCategory());
+        Location location = getLocation(newEventDto.getLocation());
+        event.setInitiator(user);
+        event.setCategory(category);
+        event.setLocation(location);
+        event.setState(EventState.PENDING);
+        checkDateTimeIsAfterNowWithGap(event.getEventDate(), 2);
+        Event savedEvent = eventRepository.save(event);
+        return eventMapper.toEventFullDto(savedEvent);
+    }
+
+    @Override
     @Transactional
     public EventFullDto updateByPrivate(UpdateEventUserRequest request, Long userId, Long eventId) {
         getUserIfExists(userId);
@@ -89,23 +99,13 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         }
         updateEventFields(event, request);
         updateEventStateAction(event, request.getStateAction());
-        eventRepo.save(event);
+        eventRepository.save(event);
         return eventMapper.toEventFullDto(event);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<ParticipationRequestDto> getRequestsByPrivate(Long userId, Long eventId) {
-        getUserIfExists(userId);
-        return requestRepo.findByEventId(eventId)
-                .stream()
-                .map(participationRequestMapper::toRequestDto)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     @Transactional
-    public EventRequestStatusUpdateResult updateByPrivate(EventRequestStatusUpdateRequest update, Long userId, Long eventId) {
+    public EventRequestStatusUpdateResult updateStatusByPrivate(EventRequestStatusUpdateRequest update, Long userId, Long eventId) {
         getUserIfExists(userId);
         Event event = getEventIfExists(eventId);
         List<Long> requestIds = update.getRequestIds();
@@ -113,7 +113,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         if (!isRequestStatusUpdateAllowed(event, update)) {
             return result;
         }
-        List<ParticipationRequest> requestsToUpdate = requestRepo.findAllByIdIn(requestIds);
+        List<ParticipationRequest> requestsToUpdate = requestRepository.findAllByIdIn(requestIds);
         checkAllRequestsPending(requestsToUpdate);
         RequestStatus status = RequestStatus.valueOf(update.getStatus());
         if (status == RequestStatus.CONFIRMED) {
@@ -128,7 +128,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
     @Transactional(readOnly = true)
     public List<EventFullDto> getEventsByAdmin(EventFilterParamsDto paramsDto) {
         EventFilterParams params = convertInputParams(paramsDto);
-        List<Event> events = eventRepo.adminEventsSearch(params);
+        List<Event> events = eventRepository.adminEventsSearch(params);
         statService.getViewsList(events);
         getConfirmedRequest(events);
         return events.stream()
@@ -158,7 +158,19 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
                     break;
             }
         }
-        return eventMapper.toEventFullDto(eventRepo.save(event));
+        return eventMapper.toEventFullDto(eventRepository.save(event));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EventShortDto> getEventsByPublic(EventFilterParamsDto paramsDto, HttpServletRequest request) {
+        EventFilterParams params = convertInputParams(paramsDto);
+        List<Event> events = eventRepository.publicEventsSearch(params);
+        statService.getViewsList(events);
+        getConfirmedRequest(events);
+        statService.addHit(request);
+        return events.stream().map(eventMapper::toEventShortDto)
+                .sorted(getComparator(params.getSort())).collect(Collectors.toList());
     }
 
     @Override
@@ -174,30 +186,6 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         return eventFullDto;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<EventShortDto> getEventsByPublic(EventFilterParamsDto paramsDto, HttpServletRequest request) {
-        EventFilterParams params = convertInputParams(paramsDto);
-        List<Event> events = eventRepo.publicEventsSearch(params);
-        statService.getViewsList(events);
-        getConfirmedRequest(events);
-        statService.addHit(request);
-        return events.stream().map(eventMapper::toEventShortDto)
-                .sorted(getComparator(params.getSort())).collect(Collectors.toList());
-    }
-
-    private void getConfirmedRequest(List<Event> events) {
-        List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
-        List<ConfirmedRequest> confirmedRequests = requestRepo.findConfirmedRequest(eventIds);
-        Map<Long, Long> confirmedRequestsMap = confirmedRequests.stream()
-                .collect(Collectors.toMap(ConfirmedRequest::getEventId, ConfirmedRequest::getCount));
-        events.forEach(event -> event.setConfirmedRequests(confirmedRequestsMap.getOrDefault(event.getId(), 0L)));
-    }
-
-    private Comparator<EventDto> getComparator(EventSort sortType) {
-        return EventDto.getComparator(sortType);
-    }
-
     private boolean isRequestStatusUpdateAllowed(Event event, EventRequestStatusUpdateRequest update) {
         return event.getRequestModeration() &&
                 event.getParticipantLimit() > 0 &&
@@ -208,14 +196,6 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         Long eventId = eventDto.getId();
         Long views = statService.getViews(eventId);
         eventDto.setViews(views);
-    }
-
-    private static void checkAllRequestsPending(List<ParticipationRequest> requests) {
-        boolean allPending = requests.stream()
-                .allMatch(r -> r.getStatus() == RequestStatus.PENDING);
-        if (!allPending) {
-            throw new ConflictException("Impossible to change request status.");
-        }
     }
 
     private EventFilterParams convertInputParams(EventFilterParamsDto paramsDto) {
@@ -235,9 +215,11 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         return params;
     }
 
-    private static LocalDateTime getFromStringOrSetDefault(String dateTimeString, LocalDateTime defaultValue) throws UnsupportedEncodingException {
+    private static LocalDateTime getFromStringOrSetDefault(String dateTimeString, LocalDateTime defaultValue)
+            throws UnsupportedEncodingException {
         if (dateTimeString != null) {
-            return stringToLocalDateTime(java.net.URLDecoder.decode(dateTimeString, StandardCharsets.UTF_8));
+            return ExploreDateTimeFormatter.stringToLocalDateTime(URLDecoder.decode(dateTimeString,
+                    StandardCharsets.UTF_8));
         }
         return defaultValue;
     }
@@ -266,8 +248,9 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         event.setState(EventState.CANCELED);
     }
 
-    private void confirmAndSetInResult(List<ParticipationRequest> requestsToUpdate, EventRequestStatusUpdateResult result, Event event) {
-        long confirmed = requestRepo.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
+    private void confirmAndSetInResult(List<ParticipationRequest> requestsToUpdate,
+                                       EventRequestStatusUpdateResult result, Event event) {
+        long confirmed = requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
         long limit = event.getParticipantLimit();
 
         for (ParticipationRequest request : requestsToUpdate) {
@@ -282,49 +265,55 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         }
     }
 
-    private void rejectAndSetInResult(List<ParticipationRequest> requestsToUpdate, EventRequestStatusUpdateResult result) {
+    private void rejectAndSetInResult(List<ParticipationRequest> requestsToUpdate,
+                                      EventRequestStatusUpdateResult result) {
         setStatus(requestsToUpdate, RequestStatus.REJECTED);
-        List<ParticipationRequest> rejectedRequests = requestRepo.saveAll(requestsToUpdate);
+        List<ParticipationRequest> rejectedRequests = requestRepository.saveAll(requestsToUpdate);
         result.setRejectedRequests(participationRequestMapper.toRequestDtoList(rejectedRequests));
     }
 
-    private void confirmAndSetInResult(List<ParticipationRequest> requestsToUpdate, EventRequestStatusUpdateResult result) {
+    private void confirmAndSetInResult(List<ParticipationRequest> requestsToUpdate,
+                                       EventRequestStatusUpdateResult result) {
         setStatus(requestsToUpdate, RequestStatus.CONFIRMED);
-        List<ParticipationRequest> confirmed = requestRepo.saveAll(requestsToUpdate);
+        List<ParticipationRequest> confirmed = requestRepository.saveAll(requestsToUpdate);
         result.setConfirmedRequests(participationRequestMapper.toRequestDtoList(confirmed));
     }
 
-    private void setStatus(List<ParticipationRequest> requestsToUpdate, RequestStatus status) {
-        requestsToUpdate.forEach(r -> r.setStatus(status));
+    private void setStatus(List<ParticipationRequest> requestsToUpdate, RequestStatus requestStatus) {
+        requestsToUpdate.forEach(r -> r.setStatus(requestStatus));
     }
 
     private User getUserIfExists(Long userId) {
-        return userRepo.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found or unavailable."));
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+    }
+
+    private Comparator<EventDto> getComparator(EventSort eventSort) {
+        return EventDto.getComparator(eventSort);
+    }
+
+    private void getConfirmedRequest(List<Event> events) {
+        List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+        List<ConfirmedRequest> confirmedRequests = requestRepository.findConfirmedRequest(eventIds);
+        Map<Long, Long> confirmedRequestsMap = confirmedRequests.stream()
+                .collect(Collectors.toMap(ConfirmedRequest::getEventId, ConfirmedRequest::getCount));
+        events.forEach(event -> event.setConfirmedRequests(confirmedRequestsMap.getOrDefault(event.getId(), 0L)));
     }
 
     private Event getEventIfExists(Long eventId) {
-        return eventRepo.findById(eventId)
+        return eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event not found."));
     }
 
-    private Category getCategoryIfExists(Long catId) {
-        return categoryRepo.findById(catId)
+    private Category getCategoryIfExists(Long categoryId) {
+        return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException("Category not found."));
     }
 
     private Location getLocation(LocationDto locationDto) {
         Location location = locationMapper.toLocation(locationDto);
-        return locationRepo.getByLatAndLon(location.getLat(), location.getLon())
-                .orElse(locationRepo.save(location));
-    }
-
-    private EventFullDto completeEventFullDto(Event event) {
-        EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
-        Long confirmedRequests = requestRepo.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
-        completeWithViews(eventFullDto);
-        eventFullDto.setConfirmedRequests(confirmedRequests);
-        return eventFullDto;
+        return locationRepository.getByLatAndLon(location.getLat(), location.getLon())
+                .orElse(locationRepository.save(location));
     }
 
     private void updateEventFields(Event event, UpdateEventRequest request) {
@@ -403,6 +392,22 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
     private void updateEventAnnotation(Event event, String annotation) {
         if (Objects.nonNull(annotation) && !annotation.isBlank()) {
             event.setAnnotation(annotation);
+        }
+    }
+
+    private EventFullDto completeEventFullDto(Event event) {
+        EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
+        Long confirmedRequests = requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
+        completeWithViews(eventFullDto);
+        eventFullDto.setConfirmedRequests(confirmedRequests);
+        return eventFullDto;
+    }
+
+    private static void checkAllRequestsPending(List<ParticipationRequest> requests) {
+        boolean allPending = requests.stream()
+                .allMatch(r -> r.getStatus() == RequestStatus.PENDING);
+        if (!allPending) {
+            throw new ConflictException("Impossible to change request status.");
         }
     }
 

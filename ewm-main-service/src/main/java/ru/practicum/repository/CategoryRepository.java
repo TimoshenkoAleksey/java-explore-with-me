@@ -6,5 +6,6 @@ import ru.practicum.model.Category;
 import java.util.Optional;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
+
     Optional<Category> findFirst1ByName(String name);
 }

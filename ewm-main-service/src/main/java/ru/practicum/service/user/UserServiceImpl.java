@@ -28,7 +28,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto add(NewUserRequest request) {
         repository.findFirst1ByName(request.getName()).ifPresent((user) -> {
-            throw new ConflictException("User name already exists and could be saved.");
+            throw new ConflictException("User name already exists.");
         });
         User newUser = mapper.toUser(request);
         User savedUser = repository.save(newUser);
@@ -52,7 +52,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void delete(Long userId) {
         User user = repository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found or unavailable."));
+                .orElseThrow(() -> new NotFoundException("User not found."));
         repository.delete(user);
     }
 }
