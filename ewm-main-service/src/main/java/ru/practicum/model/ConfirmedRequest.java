@@ -4,8 +4,12 @@ import lombok.*;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class ConfirmedRequest {
     private Long count;
     private Long eventId;
+
+    public ConfirmedRequest(Long eventId, Long count) {
+        this.eventId = eventId;
+        this.count = count;
+    }
 }

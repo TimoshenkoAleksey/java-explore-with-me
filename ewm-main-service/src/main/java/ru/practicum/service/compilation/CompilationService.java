@@ -7,14 +7,13 @@ import ru.practicum.dto.compilation.UpdateCompilationRequest;
 import java.util.List;
 
 public interface CompilationService {
+    CompilationDto add(NewCompilationDto newCompDto);
+
+    CompilationDto update(Long compId, UpdateCompilationRequest request);
+
+    void delete(Long compId);
 
     List<CompilationDto> getAll(Boolean pinned, Integer from, Integer size);
 
-    CompilationDto getById(Long compilationId);
-
-    CompilationDto add(NewCompilationDto newCompilationDto);
-
-    CompilationDto update(Long compilationId, UpdateCompilationRequest updateCompilationRequest);
-
-    void delete(Long compilationId);
+    CompilationDto getById(Long compId);
 }
