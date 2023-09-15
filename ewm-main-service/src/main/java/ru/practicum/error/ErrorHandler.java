@@ -60,10 +60,4 @@ public class ErrorHandler {
     public ru.practicum.exception.ErrorResponse handleMissingServletRequestParameterException(final MissingServletRequestParameterException e) {
         return new ru.practicum.exception.ErrorResponse("Validation error: ", e.getMessage());
     }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ru.practicum.exception.ErrorResponse handleRuntimeException(final RuntimeException e) {
-        return new ru.practicum.exception.ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage());
-    }
 }

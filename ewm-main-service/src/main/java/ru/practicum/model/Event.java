@@ -18,31 +18,46 @@ public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String annotation;
+
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
+
     @CreationTimestamp
     private LocalDateTime createdOn;
+
     private String description;
+
     private LocalDateTime eventDate;
+
     @ManyToOne
     @JoinColumn(name = "initiator_id")
     private User initiator;
+
     @ManyToOne
     @JoinColumn(name = "location_id")
     @Valid
     private Location location;
+
     private Boolean paid;
+
     private Long participantLimit;
+
     private LocalDateTime publishedOn;
+
     private Boolean requestModeration;
+
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private EventState state = EventState.PENDING;
+
     private String title;
+
     @Transient
     private Long views;
+
     @Transient
     private Long confirmedRequests;
 }

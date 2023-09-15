@@ -11,5 +11,6 @@ public class ConfirmedRequest {
     public ConfirmedRequest(Long eventId, Long count) {
         this.eventId = eventId;
         this.count = count;
+
     }
 }
