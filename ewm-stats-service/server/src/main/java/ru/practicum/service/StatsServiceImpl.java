@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.HitDto;
+import ru.practicum.exception.BadRequestException;
 import ru.practicum.mapper.HitMapper;
 import ru.practicum.model.Stats;
 import ru.practicum.repository.StatsRepository;
@@ -25,6 +26,9 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public List<Stats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+        if (end.isBefore(start)) {
+            throw new BadRequestException("Wrong date-time range");
+        }
         List<Stats> statsList;
         if (uris == null) {
             if (unique) {
