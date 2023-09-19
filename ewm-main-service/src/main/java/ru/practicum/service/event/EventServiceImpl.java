@@ -4,20 +4,41 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.dto.event.*;
+import ru.practicum.dto.event.EventDto;
+import ru.practicum.dto.event.EventFilterParams;
+import ru.practicum.dto.event.EventFilterParamsDto;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.EventShortDto;
+import ru.practicum.dto.event.NewEventDto;
+import ru.practicum.dto.event.UpdateEventAdminRequest;
+import ru.practicum.dto.event.UpdateEventRequest;
+import ru.practicum.dto.event.UpdateEventUserRequest;
 import ru.practicum.dto.location.LocationDto;
 import ru.practicum.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.request.EventRequestStatusUpdateResult;
 import ru.practicum.dto.request.ParticipationRequestDto;
-import ru.practicum.enums.*;
-import ru.practicum.error.exeption.BadRequestException;
-import ru.practicum.error.exeption.ConflictException;
-import ru.practicum.error.exeption.NotFoundException;
+import ru.practicum.enums.EventSort;
+import ru.practicum.enums.EventState;
+import ru.practicum.enums.RequestStatus;
+import ru.practicum.enums.StateActionAdmin;
+import ru.practicum.enums.StateActionUser;
+import ru.practicum.exception.exeptions.BadRequestException;
+import ru.practicum.exception.exeptions.ConflictException;
+import ru.practicum.exception.exeptions.NotFoundException;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.mapper.LocationMapper;
 import ru.practicum.mapper.ParticipationRequestMapper;
-import ru.practicum.model.*;
-import ru.practicum.repository.*;
+import ru.practicum.model.Category;
+import ru.practicum.model.ConfirmedRequest;
+import ru.practicum.model.Event;
+import ru.practicum.model.Location;
+import ru.practicum.model.ParticipationRequest;
+import ru.practicum.model.User;
+import ru.practicum.repository.CategoryRepository;
+import ru.practicum.repository.EventRepository;
+import ru.practicum.repository.LocationRepository;
+import ru.practicum.repository.RequestRepository;
+import ru.practicum.repository.UserRepository;
 import ru.practicum.service.stat.StatService;
 import ru.practicum.utils.ExploreDateTimeFormatter;
 
@@ -26,7 +47,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,6 +72,9 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
     @Transactional(readOnly = true)
     public List<EventShortDto> getEventsByPrivate(Long userId, Integer from, Integer size) {
         getUserIfExists(userId);
+        if (size <= 0) {
+            throw new IllegalArgumentException("Parameter 'size' must be positive");
+        }
         int page = from / size;
         List<Event> events = eventRepository.findByInitiatorId(userId, PageRequest.of(page, size));
         statService.getViewsList(events);
@@ -105,7 +133,8 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
 
     @Override
     @Transactional
-    public EventRequestStatusUpdateResult updateStatusByPrivate(EventRequestStatusUpdateRequest update, Long userId, Long eventId) {
+    public EventRequestStatusUpdateResult updateStatusByPrivate(EventRequestStatusUpdateRequest update,
+                                                                Long userId, Long eventId) {
         getUserIfExists(userId);
         Event event = getEventIfExists(eventId);
         List<Long> requestIds = update.getRequestIds();
@@ -149,13 +178,10 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         }
         StateActionAdmin action = request.getStateAction();
         if (Objects.nonNull(action)) {
-            switch (action) {
-                case PUBLISH_EVENT:
-                    publishEvent(request, event);
-                    break;
-                case REJECT_EVENT:
-                    rejectEvent(event);
-                    break;
+            if (action == StateActionAdmin.PUBLISH_EVENT) {
+                publishEvent(request, event);
+            } else {
+                rejectEvent(event);
             }
         }
         return eventMapper.toEventFullDto(eventRepository.save(event));
@@ -215,7 +241,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         return params;
     }
 
-    private static LocalDateTime getFromStringOrSetDefault(String dateTimeString, LocalDateTime defaultValue)
+    private LocalDateTime getFromStringOrSetDefault(String dateTimeString, LocalDateTime defaultValue)
             throws UnsupportedEncodingException {
         if (dateTimeString != null) {
             return ExploreDateTimeFormatter.stringToLocalDateTime(URLDecoder.decode(dateTimeString,
@@ -403,7 +429,7 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
         return eventFullDto;
     }
 
-    private static void checkAllRequestsPending(List<ParticipationRequest> requests) {
+    private void checkAllRequestsPending(List<ParticipationRequest> requests) {
         boolean allPending = requests.stream()
                 .allMatch(r -> r.getStatus() == RequestStatus.PENDING);
         if (!allPending) {

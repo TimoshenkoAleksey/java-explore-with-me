@@ -1,6 +1,7 @@
 package ru.practicum.model;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -11,6 +12,5 @@ public class ConfirmedRequest {
     public ConfirmedRequest(Long eventId, Long count) {
         this.eventId = eventId;
         this.count = count;
-
     }
 }

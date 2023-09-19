@@ -1,4 +1,4 @@
-package ru.practicum.repository.customEvent;
+package ru.practicum.repository.custom_event;
 
 import org.springframework.stereotype.Repository;
 import ru.practicum.enums.EventState;

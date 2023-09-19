@@ -1,4 +1,4 @@
-package ru.practicum.repository.customEvent;
+package ru.practicum.repository.custom_event;
 
 import ru.practicum.dto.event.EventFilterParams;
 import ru.practicum.model.Event;

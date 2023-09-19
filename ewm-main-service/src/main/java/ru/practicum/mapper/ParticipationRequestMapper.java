@@ -9,10 +9,10 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface ParticipationRequestMapper {
-    @Mapping(target = "event", expression = "java(request.getEvent().getId())")
+    @Mapping(target = "event", source = "event.id")
     @Mapping(target = "created", expression = "java(ru.practicum.utils.ExploreDateTimeFormatter.localDateTimeToString(request.getCreated()))")
-    @Mapping(target = "requester", expression = "java(request.getRequester().getId())")
-    @Mapping(target = "status", expression = "java(request.getStatus().name())")
+    @Mapping(target = "requester", source = "requester.id")
+    @Mapping(target = "status", source = "status")
     ParticipationRequestDto toRequestDto(ParticipationRequest request);
 
     List<ParticipationRequestDto> toRequestDtoList(List<ParticipationRequest> requests);

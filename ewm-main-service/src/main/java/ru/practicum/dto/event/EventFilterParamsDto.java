@@ -1,6 +1,10 @@
 package ru.practicum.dto.event;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import ru.practicum.enums.EventSort;
 import ru.practicum.enums.EventState;
 

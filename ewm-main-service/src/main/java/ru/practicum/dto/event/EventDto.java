@@ -1,8 +1,7 @@
 package ru.practicum.dto.event;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import ru.practicum.dto.category.CategoryDto;
@@ -15,8 +14,7 @@ import java.util.Objects;
 
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
+@RequiredArgsConstructor
 @SuperBuilder(toBuilder = true)
 public class EventDto implements Comparable<EventDto> {
     private Long id;

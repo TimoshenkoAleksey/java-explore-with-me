@@ -1,6 +1,8 @@
 package ru.practicum.dto.location;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
@@ -8,18 +10,16 @@ import javax.validation.constraints.NotNull;
 
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder(toBuilder = true)
-public class LocationDto {
+@RequiredArgsConstructor
+public final class LocationDto {
 
     @NotNull
     @DecimalMin(value = "-180.0")
     @DecimalMax(value = "180.0")
-    private Double lat;
+    private final Double lat;
 
     @NotNull
     @DecimalMin(value = "-180.0")
     @DecimalMax(value = "180.0")
-    private Double lon;
+    private final Double lon;
 }

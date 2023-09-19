@@ -2,12 +2,10 @@ package ru.practicum.dto.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import ru.practicum.dto.location.LocationDto;
 
 @Getter
-@Setter
 @AllArgsConstructor
 @SuperBuilder(toBuilder = true)
 public class EventFullDto extends EventDto {

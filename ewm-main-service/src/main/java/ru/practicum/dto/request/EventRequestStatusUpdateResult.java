@@ -1,13 +1,14 @@
 package ru.practicum.dto.request;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Builder(toBuilder = true)
-@AllArgsConstructor
-@NoArgsConstructor
+
+@RequiredArgsConstructor
 @Getter
 @Setter
 public class EventRequestStatusUpdateResult {

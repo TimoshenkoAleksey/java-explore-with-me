@@ -1,6 +1,8 @@
 package ru.practicum.dto.compilation;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
 
 import java.util.HashSet;
@@ -8,9 +10,7 @@ import java.util.Set;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder(toBuilder = true)
+@RequiredArgsConstructor
 public class UpdateCompilationRequest {
     @Length(min = 1, max = 50)
     private String title;

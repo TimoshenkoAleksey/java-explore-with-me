@@ -1,4 +1,4 @@
-package ru.practicum.error;
+package ru.practicum.exception;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -8,9 +8,10 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.practicum.error.exeption.BadRequestException;
-import ru.practicum.error.exeption.ConflictException;
-import ru.practicum.error.exeption.NotFoundException;
+import ru.practicum.exception.exeptions.BadRequestException;
+import ru.practicum.exception.exeptions.ConflictException;
+import ru.practicum.exception.exeptions.JsonException;
+import ru.practicum.exception.exeptions.NotFoundException;
 
 import javax.validation.ConstraintViolationException;
 
@@ -22,14 +23,8 @@ public class ErrorHandler {
             MissingPathVariableException.class,
             BadRequestException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handle(Exception e) throws Exception {
-        if (e instanceof ConstraintViolationException ||
-                e instanceof MethodArgumentNotValidException ||
-                e instanceof MissingPathVariableException ||
-                e instanceof BadRequestException) {
-            return new ErrorResponse("Validation error: ", e.getMessage());
-        }
-        throw e;
+    public ErrorResponse handle(Exception e) {
+        return new ErrorResponse("Validation error: ", e.getMessage());
     }
 
     @ExceptionHandler
@@ -52,14 +47,27 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ru.practicum.exception.ErrorResponse handleMissingServletRequestParameterException(final MissingServletRequestParameterException e) {
+    public ru.practicum.exception.ErrorResponse handleIllegalArgumentException(final IllegalArgumentException e) {
+        return new ru.practicum.exception.ErrorResponse("IllegalArgument error: ", e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ru.practicum.exception.ErrorResponse handleMissingServletRequestParameterException(
+            final MissingServletRequestParameterException e) {
         return new ru.practicum.exception.ErrorResponse("Validation error: ", e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ru.practicum.exception.ErrorResponse handleJsonException(final JsonException e) {
+        return new ru.practicum.exception.ErrorResponse("Json error: ", e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleRuntimeException(final RuntimeException e) {
-        return new ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage());
+        return new ErrorResponse("Runtime error", e.getMessage());
     }
 
     @ExceptionHandler()

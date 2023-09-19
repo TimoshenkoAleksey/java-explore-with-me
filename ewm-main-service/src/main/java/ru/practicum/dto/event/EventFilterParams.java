@@ -1,6 +1,9 @@
 package ru.practicum.dto.event;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import ru.practicum.enums.EventSort;
 import ru.practicum.enums.EventState;
 
@@ -10,7 +13,6 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @Builder(toBuilder = true)
 public class EventFilterParams {
     private List<Long> ids;

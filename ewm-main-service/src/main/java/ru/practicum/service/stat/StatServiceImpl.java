@@ -11,13 +11,17 @@ import org.springframework.stereotype.Service;
 import ru.practicum.StatsClient;
 import ru.practicum.ViewStats;
 import ru.practicum.enums.EventState;
-import ru.practicum.error.exeption.NotFoundException;
+import ru.practicum.exception.exeptions.NotFoundException;
 import ru.practicum.model.Event;
 import ru.practicum.repository.EventRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor

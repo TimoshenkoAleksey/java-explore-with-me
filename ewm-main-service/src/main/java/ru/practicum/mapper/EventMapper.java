@@ -2,7 +2,11 @@ package ru.practicum.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import ru.practicum.dto.event.*;
+import ru.practicum.dto.event.EventFilterParams;
+import ru.practicum.dto.event.EventFilterParamsDto;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.EventShortDto;
+import ru.practicum.dto.event.NewEventDto;
 import ru.practicum.model.Event;
 
 import java.time.LocalDateTime;
@@ -12,7 +16,7 @@ import java.util.List;
 public interface EventMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "eventDate", expression = "java(newEventDto.getEventDate())")
+    @Mapping(target = "eventDate", source = " eventDate")
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "location", ignore = true)
     @Mapping(target = "createdOn", ignore = true)
