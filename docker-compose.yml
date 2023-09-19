@@ -1,6 +1,6 @@
 version: '3.1'
 services:
-  stats-service:
+  stats-server:
     build: ewm-stats-service/server
     image: stats-service
     container_name: stats-service
@@ -10,8 +10,8 @@ services:
       - stats-db
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/postgres
-      - POSTGRES_USER=iamgroot
-      - POSTGRES_PASSWORD=iamgroot
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
 
   stats-db:
     image: postgres:14-alpine
@@ -22,8 +22,8 @@ services:
       - "6541:5432"
     environment:
       - POSTGRES_DB=postgres
-      - POSTGRES_USER=iamgroot
-      - POSTGRES_PASSWORD=iamgroot
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
 
   ewm-service:
     build: ewm-main-service/
@@ -34,9 +34,10 @@ services:
     depends_on:
       - ewm-db
     environment:
+      - STATS_SERVER_URL=http://stats-server:9090
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm
-      - SPRING_DATASOURCE_USERNAME=iamgroot
-      - SPRING_DATASOURCE_PASSWORD=iamgroot
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
 
 
   ewm-db:
@@ -48,5 +49,5 @@ services:
       - "6542:5432"
     environment:
       - POSTGRES_DB=ewm
-      - POSTGRES_USER=iamgroot
-      - POSTGRES_PASSWORD=iamgroot
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
