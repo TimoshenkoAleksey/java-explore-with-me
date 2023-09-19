@@ -40,8 +40,8 @@ public interface EventMapper {
     @Mapping(target = "views", ignore = true)
     EventShortDto toEventShortDto(Event event);
 
-    @Mapping(target = "rangeStart", expression = "java(start)")
-    @Mapping(target = "rangeEnd", expression = "java(end)")
+    @Mapping(target = "rangeStart", source = "start")
+    @Mapping(target = "rangeEnd", source = "end")
     EventFilterParams toEventFilterParams(EventFilterParamsDto filterDto, LocalDateTime start, LocalDateTime end);
 
     List<EventShortDto> toEventShortDtoListForEvents(List<Event> events);
