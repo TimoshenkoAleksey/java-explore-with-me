@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.StatsClient;
 import ru.practicum.ViewStats;
 import ru.practicum.enums.EventState;
+import ru.practicum.exception.exeptions.JsonException;
 import ru.practicum.exception.exeptions.NotFoundException;
 import ru.practicum.model.Event;
 import ru.practicum.repository.EventRepository;
@@ -57,7 +58,7 @@ public class StatServiceImpl implements StatService {
             List<ViewStats> viewStats = Arrays.asList(mapper.readValue(responseValue, new TypeReference<>(){}));
             return viewStats.isEmpty() ? 0 : viewStats.get(0).getHits();
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new JsonException("Can’t create an instance of the class");
         }
     }
 

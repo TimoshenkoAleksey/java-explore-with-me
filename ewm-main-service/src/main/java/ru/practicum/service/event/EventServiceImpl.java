@@ -72,9 +72,6 @@ public class EventServiceImpl implements AdminEventService, PublicEventService, 
     @Transactional(readOnly = true)
     public List<EventShortDto> getEventsByPrivate(Long userId, Integer from, Integer size) {
         getUserIfExists(userId);
-        if (size <= 0) {
-            throw new IllegalArgumentException("Parameter 'size' must be positive");
-        }
         int page = from / size;
         List<Event> events = eventRepository.findByInitiatorId(userId, PageRequest.of(page, size));
         statService.getViewsList(events);

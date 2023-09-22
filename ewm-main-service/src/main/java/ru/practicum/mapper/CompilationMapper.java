@@ -13,7 +13,7 @@ import java.util.Set;
 public interface CompilationMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "events", expression = "java(events)")
+    @Mapping(target = "events", source = "events")
     Compilation toCompilation(NewCompilationDto newCompDto, Set<Event> events);
 
     CompilationDto toCompilationDto(Compilation compilation);
