@@ -15,3 +15,5 @@ The main service contains all the necessary functionality for the product.
 The API is divided into three parts: The first part is public and accessible to any network user without registration. The second part is restricted and accessible only to authenticated users. The third part is administrative, intended for service administrators.
 
 Statistics Service stores the number of views and enables various queries for analyzing the application's performance.
+
+How to Use: Run mvn clean package. Start the application with docker-compose up -d
